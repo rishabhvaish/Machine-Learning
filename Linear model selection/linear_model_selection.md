@@ -257,3 +257,240 @@ significant initially due to unscaled data. but after removing some
 variables or scaling the data we find that lstat is the most significant
 value. This is also confirmed by the result of regsubsets as “lstat” is
 the variable selected in one variable model.
+
+## Cross-Validation for Model Selection
+
+We will use the [Walmart Sales
+data](https://www.kaggle.com/anshg98/walmart-sales#Train.csv) provided
+on Kaggle. For this section, we will use only the Train.csv file. The
+file is also available at
+[here](https://teazrq.github.io/stat432/homework.html).
+
+Do the following to process the data: + Read data into R + Convert
+character variables into factors + Remove `Item_Identifier` + Further
+convert all factors into dummy variables
+
+``` r
+# Reading data
+library(tidyverse)
+WalmartSales <- read_csv("train.csv")
+
+#convert y to lag scale
+WalmartSales$Item_Outlet_Sales <-
+  log(WalmartSales$Item_Outlet_Sales)
+
+#check for character datatype
+sapply(WalmartSales, class) == "character"
+```
+
+    ##           Item_Identifier               Item_Weight          Item_Fat_Content 
+    ##                      TRUE                     FALSE                      TRUE 
+    ##           Item_Visibility                 Item_Type                  Item_MRP 
+    ##                     FALSE                      TRUE                     FALSE 
+    ##         Outlet_Identifier Outlet_Establishment_Year               Outlet_Size 
+    ##                      TRUE                     FALSE                      TRUE 
+    ##      Outlet_Location_Type               Outlet_Type         Item_Outlet_Sales 
+    ##                      TRUE                      TRUE                     FALSE
+
+``` r
+char <-
+  c(colnames(WalmartSales[sapply(WalmartSales, class) == "character"]))
+#convert character to factors
+WalmartSales[char] = lapply(WalmartSales[char], factor) ## Convert to factor
+
+#remove item identifier
+WalmartSales$Item_Identifier <- NULL
+
+# convert factors into dummies
+factor <-
+  c(colnames(WalmartSales[sapply(WalmartSales, class) == "factor"]))
+
+WalMartData <- model.matrix(
+  ~ . - 1,
+  data = WalmartSales,
+  contrasts.arg = lapply(WalmartSales[factor], contrasts, contrasts =
+                           FALSE)
+)
+
+colnames(WalMartData)
+```
+
+    ##  [1] "Item_Weight"                    "Item_Fat_ContentLF"            
+    ##  [3] "Item_Fat_Contentlow fat"        "Item_Fat_ContentLow Fat"       
+    ##  [5] "Item_Fat_Contentreg"            "Item_Fat_ContentRegular"       
+    ##  [7] "Item_Visibility"                "Item_TypeBaking Goods"         
+    ##  [9] "Item_TypeBreads"                "Item_TypeBreakfast"            
+    ## [11] "Item_TypeCanned"                "Item_TypeDairy"                
+    ## [13] "Item_TypeFrozen Foods"          "Item_TypeFruits and Vegetables"
+    ## [15] "Item_TypeHard Drinks"           "Item_TypeHealth and Hygiene"   
+    ## [17] "Item_TypeHousehold"             "Item_TypeMeat"                 
+    ## [19] "Item_TypeOthers"                "Item_TypeSeafood"              
+    ## [21] "Item_TypeSnack Foods"           "Item_TypeSoft Drinks"          
+    ## [23] "Item_TypeStarchy Foods"         "Item_MRP"                      
+    ## [25] "Outlet_IdentifierOUT010"        "Outlet_IdentifierOUT013"       
+    ## [27] "Outlet_IdentifierOUT017"        "Outlet_IdentifierOUT018"       
+    ## [29] "Outlet_IdentifierOUT019"        "Outlet_IdentifierOUT027"       
+    ## [31] "Outlet_IdentifierOUT035"        "Outlet_IdentifierOUT045"       
+    ## [33] "Outlet_IdentifierOUT046"        "Outlet_IdentifierOUT049"       
+    ## [35] "Outlet_Establishment_Year"      "Outlet_SizeHigh"               
+    ## [37] "Outlet_SizeMedium"              "Outlet_SizeSmall"              
+    ## [39] "Outlet_Location_TypeTier 1"     "Outlet_Location_TypeTier 2"    
+    ## [41] "Outlet_Location_TypeTier 3"     "Outlet_TypeGrocery Store"      
+    ## [43] "Outlet_TypeSupermarket Type1"   "Outlet_TypeSupermarket Type2"  
+    ## [45] "Outlet_TypeSupermarket Type3"   "Item_Outlet_Sales"
+
+``` r
+dim(WalMartData)
+```
+
+    ## [1] 4650   46
+
+Use all variables to model the outcome `Item_Outlet_Sales` in its
+\(log\) scale. First, we randomly split the data into two parts with
+equal size. Make sure that you set a random seed so that the result can
+be replicated. Treat one as the training data, and the other one as the
+testing data. For the training data, perform the following: + Use
+cross-validation to select the best Lasso model. Consider both
+`lambda.min` and `lambda.1se`. Provide additional information to
+summarize the model fitting result + Use cross-validation to select the
+best Ridge model. Consider both `lambda.min` and `lambda.1se`. Provide
+additional information to summarize the model fitting result + Test
+these four models on the testing data and report and compare the
+prediction accuracy
+
+### Answer
+
+By fitting the cv.glmnest we recieve two optimized lambda values.
+Lamnbda.min and lambda.1se. Lambda.min gives the lambda corresponding to
+minimum training error and lambda.1se corresponds to the value one
+standard error away from minimum error.
+
+``` r
+set.seed(1)
+index <- sample(nrow(WalMartData), 0.5 * nrow(WalMartData))
+
+#Split into test and train
+train <- WalMartData[index, ]
+test <- WalMartData[-index, ]
+
+library(glmnet)
+# Fitting lasso cv to get lambda.min and lambda.1se
+lasso_cv <-
+  cv.glmnet(train[, -ncol(train)], train[, ncol(train)], alpha = 1, nfolds = 10)
+#Fitting lasso with lambda.min
+lasso_min <-
+  glmnet(train[, -ncol(train)],
+         train[, ncol(train)],
+         lambda = lasso_cv$lambda.min,
+         alpha = 1)
+#Fitting lasso with lambda.1se
+lasso_1se <-
+  glmnet(train[, -ncol(train)],
+         train[, ncol(train)],
+         lambda = lasso_cv$lambda.1se,
+         alpha = 1)
+
+#Fit ridge cv to get ridge.min and ridge.1se
+ridge_cv <-
+  cv.glmnet(train[, -ncol(train)], train[, ncol(train)], alpha = 0, nfolds = 10)
+# Fitting ridge with lambda min
+ridge_min <-
+  glmnet(train[, -ncol(train)],
+         train[, ncol(train)],
+         lambda = lasso_cv$lambda.min,
+         alpha = 0)
+#Fitting ridge with lamda 1se
+ridge_1se <-
+  glmnet(train[, -ncol(train)],
+         train[, ncol(train)],
+         lambda = lasso_cv$lambda.1se,
+         alpha = 0)
+```
+
+The lambda.min values are smaller than lambda.1se values. Hence applying
+less penalty will allow more variables in lasso and less shrinkage in
+ridge. Hence the lambda.min model is more complex as compared to
+lambda.1se.
+
+``` r
+#making predictions
+y_lasso_min <- predict(lasso_min, newx = test[, -ncol(test)])
+y_lasso_1se <- predict(lasso_1se, newx = test[, -ncol(test)])
+y_ridge_min <- predict(ridge_min, newx = test[, -ncol(test)])
+y_ridge_1se <- predict(ridge_1se, newx = test[, -ncol(test)])
+
+#Calculating RMSE
+rmse_lasso_min <-
+  sqrt(mean((exp(test[, ncol(test)]) - exp(y_lasso_min)) ^ 2))
+rmse_lasso_1se <-
+  sqrt(mean((exp(test[, ncol(test)]) - exp(y_lasso_1se)) ^ 2))
+rmse_ridge_min <-
+  sqrt(mean((exp(test[, ncol(test)]) - exp(y_ridge_min)) ^ 2))
+rmse_ridge_1se <-
+  sqrt(mean((exp(test[, ncol(test)]) - exp(y_ridge_1se)) ^ 2))
+
+# RMSE of 4 models Lasso_1se, lasso_min, ridge_1se, ridge_min respectively is:
+rmse_lasso_1se
+```
+
+    ## [1] 1169.603
+
+``` r
+rmse_lasso_min
+```
+
+    ## [1] 1148.435
+
+``` r
+rmse_ridge_1se
+```
+
+    ## [1] 1157.197
+
+``` r
+rmse_ridge_min
+```
+
+    ## [1] 1152.9
+
+``` r
+#calculating rquared
+rsq_lasso_min <- cor(exp(test[, ncol(test)]), exp(y_lasso_min)) ^ 2
+rsq_lasso_1se <- cor(exp(test[, ncol(test)]), exp(y_lasso_1se)) ^ 2
+rsq_ridge_min <- cor(exp(test[, ncol(test)]), exp(y_ridge_min)) ^ 2
+rsq_ridge_1se <- cor(exp(test[, ncol(test)]), exp(y_ridge_1se)) ^ 2
+
+#R-Squared of 4 models Lasso_1se, lasso_min, ridge_1se, ridge_min respectively is:
+rsq_lasso_1se
+```
+
+    ##             s0
+    ## [1,] 0.4539839
+
+``` r
+rsq_lasso_min
+```
+
+    ##             s0
+    ## [1,] 0.4542448
+
+``` r
+rsq_ridge_1se
+```
+
+    ##             s0
+    ## [1,] 0.4534846
+
+``` r
+rsq_ridge_min
+```
+
+    ##            s0
+    ## [1,] 0.449452
+
+Lambda.min models give lower rmse in both ridge and lasso. On the basis
+of RMSE and Rsquared, the Lasso model with lambda.min is the best fit.
+Lowest RMSE and highest R-squared. The difference is RMSE and R-squared
+is not much for all the four models hence we can use lambda.1se if we
+want a less complex model depending on less ariables. This can improve
+our understanding of model with some compromise on goodness of fit.
