@@ -1,0 +1,114 @@
+---
+title: "Linear Model Selection"
+author: "Rishabh Vaish"
+output: rmarkdown::github_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.height = 6, fig.width = 8, out.width = '50%', fig.align = "center")
+options(width = 90)
+```
+
+## Linear Model Selection
+
+We will use the Boston Housing data again. This time, we do not scale the covariate. We will still remove `medv`, `town` and `tract` from the data and use `cmedv` as the outcome. If you do not use R, you can download a `.csv' file from the course website. 
+
+```{r include = TRUE}
+library(mlbench)
+data(BostonHousing2)
+BH = BostonHousing2[,!(colnames(BostonHousing2) %in% c("medv", "town", "tract"))]
+linear <- lm(cmedv ~ ., data = BH)
+```
+
+The most significant variable from this full model with all features.
+
+For this, I have calculated both statistically significant variable by p-value and most important variable by comparing coefficients of scaled model.
+
+The statistically significant model can be figured using the lowest p-value for the coefficients - 
+```{r include = TRUE}
+summary(linear)
+```
+By this logic the minimum P-value is for "rm". 
+
+If we want to find the most important model. We will standardize the variables in dataset. As the variables are now on the same scale, the coefficients of model on these values can be compared to get the most important variable. 
+
+```{r include = TRUE}
+#Scaling BH data
+BH_scaled <- data.frame(scale(data.matrix(BH)))
+#Fitting a LM model
+lm_scaled <- lm(cmedv ~ ., data = BH_scaled)
+#Extracting coefficients
+coef <- lm_scaled$coefficients[2:length(lm_scaled$coefficients)]
+# getting the highest coefficient and corresponding variable
+which.max(abs(coef))
+max(abs(coef))
+```
+The most important variable by this method is "lstat". I feel "lstat" is more important on the basis of results obtained in part d.
+
+Starting from this full model, using stepwise regression with both forward and backward and BIC criterion to select the best model. We start with the basic lm full model and use step function to select best model. The names of variables removed are returned
+
+```{r include = TRUE}
+#Using step function in both directions and setting k = log(n) to get BIC
+lm_best <-
+  step(linear,
+       direction = "both",
+       k = log(nrow(BH)),
+       trace = 0)
+#Colnames of full LM model
+linear_colnames <- names(linear$coefficients)
+#Colnames of selected best model
+lm_best_colnames <- names(lm_best$coefficients)
+#Printing removed columns
+linear_colnames[!(linear_colnames %in% lm_best_colnames)]
+```
+
+Starting from this full model, use the best subset selection and list the best model of each model size. 
+
+```{r include = TRUE}
+library(leaps)
+#Using regsubsets to get best model for all number of variables.
+RSSleaps = regsubsets(cmedv ~ ., data = BH, nvmax = NULL)
+#Storing and printing the summary
+sumleaps <- summary(RSSleaps, matrix = T)
+sumleaps
+```
+
+Use the Cp criterion to select the best model 
+
+```{r include = TRUE}
+#Using the precalculated Cp values to get best model
+# The best model and its Cp:
+#Finding minimum Cp value
+which.min(sumleaps$cp)
+sumleaps$cp[which.min(sumleaps$cp)]
+```
+
+The best model is the one with lowest Cp i.e the model with 11 variables. The same four variables as that b part are removed ie - "lon"   "lat"   "indus" "age". To find the most significant variable, we will fit a linear regression using variables selected by leaps.
+
+```{r include = TRUE}
+#fitting a linear model on variables selected by leaps to get the most significant and important variables
+linear_best <-
+  lm(cmedv ~ crim + zn + chas + nox + rm + dis + rad + tax + ptratio + b + lstat,
+     data = BH)
+summary(linear_best)
+
+```
+By looking at the P-value the most statistically important variable is "rm" and "lstat" because they have the lowest p-value.
+
+To find the most important variable we will fit the linear model on scaled variables given by leaps and search for the highest beta coefficients
+```{r include = TRUE}
+#fitting a linear model on variables selected by leaps to get the most significant and important variables
+linear_best <-
+  lm(cmedv ~ crim + zn + chas + nox + rm + dis + rad + tax + ptratio + b + lstat,
+     data = BH_scaled)
+coef <- linear_best$coefficients[2:length(linear_best$coefficients)]
+# getting the highest coefficient and corresponding variable
+which.max(abs(coef))
+max(abs(coef))
+
+```
+
+Thus, I feel "lstat" is the most significant variable. "rm" seems most significant initially due to unscaled data. but after removing some variables or scaling the data we find that lstat is the most significant value. This is also confirmed by the result of regsubsets as "lstat" is the variable selected in one variable model. 
