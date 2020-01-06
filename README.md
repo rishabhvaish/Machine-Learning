@@ -9,5 +9,5 @@ A collection of codes implementing various ML algorithms in R, mostly done for c
 * Multi-dimensional Kernel and Bandwidth Selection - [kernels.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Kernels/kernels.md)
 * Tuning Random Forests in Virtual Twins (Personalized medicine) - [randomforest.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Random%20Forest/randomforest.md)
 * Code your own K-means (Clustering handwritten digits) - [kmeans.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Kmeans%20Clustering/kmeans.md)
-* Expectation Maximization algorithm (Two dimensional gaussian mixture model) - [gaussion_mixture.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Expectation%20Maximization/gaussion_mixture.md)
+* Expectation Maximization algorithm (Two dimensional gaussian mixture model) - [gaussion_mixture.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Expectation%20Maximization/gaussian_mixture.md)
 
