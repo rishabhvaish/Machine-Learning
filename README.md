@@ -8,4 +8,5 @@ A collection of codes implementing various ML algorithms in R, mostly done for c
 * Splines comparison (Linear, Quadratic, Natural cubic, Smoothing splines) - [splines.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Splines/spline.md)
 * Multi-dimensional Kernel and Bandwidth Selection - [kernels.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Kernels/kernels.md)
 * Tuning Random Forests in Virtual Twins (Personalized medicine) - [randomforest.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Random%20Forest/randomforest.md)
+* Code your own K-means (Clustering handwritten digits) - [kmeans.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Kmeans%20Clustering/kmeans.md)
 
