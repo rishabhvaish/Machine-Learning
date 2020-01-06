@@ -7,5 +7,5 @@ A collection of codes implementing various ML algorithms in R, mostly done for c
 * Coding your own LASSO - [LASSO.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/LASSO/LASSO.md)
 * Splines comparison (Linear, Quadratic, Natural cubic, Smoothing splines) - [splines.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Splines/spline.md)
 * Multi-dimensional Kernel and Bandwidth Selection - [kernels.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Kernels/kernels.md)
-* Tuning Random Forests in Virtual Twins (Personalized medicine) - [randomforest.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Random-Forest/randomforest.md)
+* Tuning Random Forests in Virtual Twins (Personalized medicine) - [randomforest.md](https://github.com/rishabhvaish/Machine-Learning/blob/master/Random%20Forest/randomforest.md)
 
