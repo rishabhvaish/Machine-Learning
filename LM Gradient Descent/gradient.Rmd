@@ -1,7 +1,8 @@
 ---
 title: "LM using gradient descent"
 author: "Rishabh Vaish"
-output: rmarkdown::github_document
+output: 
+  pdf_document: default
 ---
   
 ```{r setup, include=FALSE}

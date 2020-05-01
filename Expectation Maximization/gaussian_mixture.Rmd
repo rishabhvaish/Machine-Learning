@@ -1,7 +1,8 @@
 ---
 title: "Expectation Maximization Model"
 author: "Rishabh Vaish"
-output: rmarkdown::github_document
+output: 
+  pdf_document: default
 ---
   
 ```{r setup, include=FALSE}

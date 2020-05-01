@@ -2,7 +2,8 @@
 title: "KNN"
 author: "Rishabh Vaish"
 date: "11/10/2019"
-output: rmarkdown::github_document
+output: 
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
